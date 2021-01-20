@@ -314,6 +314,8 @@ export const Controller = class {
     this.maskMargin = this.maskMargin || 100;
     this.minZoom = this.minZoom || 10;
     this.maxZoom = this.maxZoom || 15;
+    this.originalMinZoom = this.map.getView().getMinZoom();
+    this.originalMaxZoom = this.map.getView().getMaxZoom();
     this.maskLayer_ = new MaskLayer({margin: this.maskMargin, extentInMeters: this.extentSize});
   }
 

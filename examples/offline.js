@@ -25,8 +25,11 @@ import './common_dependencies.js';
 import olMap from 'ol/Map.js';
 
 import olView from 'ol/View.js';
-import olLayerTile from 'ol/layer/Tile.js';
-import olSourceOSM from 'ol/source/OSM.js';
+import TileLayer from 'ol/layer/Tile';
+import WMTS from 'ol/source/WMTS';
+import WMTSTileGrid from 'ol/tilegrid/WMTS';
+import {get as getProjection} from 'ol/proj';
+import {getWidth} from 'ol/extent';
 import ngeoMapModule from 'ngeo/map/module.js';
 import ngeoOfflineModule from 'ngeo/offline/module.js';
 import ngeoOfflineConfiguration from 'ngeo/offline/Configuration.js';
@@ -61,15 +64,52 @@ class MainController {
      */
     this.map = new olMap({
       layers: [
-        new olLayerTile({
-          source: new olSourceOSM(),
-        }),
       ],
       view: new olView({
         center: [352379, 5172733],
         zoom: 4,
       }),
     });
+    
+    var resolutions = [];
+    var matrixIds = [];
+    var proj3857 = getProjection('EPSG:3857');
+    var maxResolution = getWidth(proj3857.getExtent()) / 256;
+
+    for (var i = 0; i < 18; i++) {
+      matrixIds[i] = i.toString();
+      resolutions[i] = maxResolution / Math.pow(2, i);
+    }
+
+    var tileGrid = new WMTSTileGrid({
+      origin: [-20037508, 20037508],
+      resolutions: resolutions,
+      matrixIds: matrixIds,
+    });
+
+    // For more information about the IGN API key see
+    // https://geoservices.ign.fr/blog/2017/06/28/geoportail_sans_compte.html
+
+    var ign_source = new WMTS({
+      url: 'https://wxs.ign.fr/pratique/geoportail/wmts',
+      layer: 'GEOGRAPHICALGRIDSYSTEMS.MAPS',
+      matrixSet: 'PM',
+      format: 'image/jpeg',
+      projection: 'EPSG:3857',
+      tileGrid: tileGrid,
+      style: 'normal',
+      attributions:
+        '<a href="http://www.ign.fr" target="_blank">' +
+        '<img src="https://wxs.ign.fr/static/logos/IGN/IGN.gif" title="Institut national de l\'' +
+        'information géographique et forestière" alt="IGN"></a>',
+    });
+
+    var ign = new TileLayer({
+      source: ign_source,
+    });
+
+    this.map.addLayer(ign);
+
 
     ngeoFeatureOverlayMgr.init(this.map);
 
