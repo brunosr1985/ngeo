@@ -153,6 +153,6 @@
     "webpack-merge": "5.7.3"
   },
   "dependencies": {
-    "mapillary-js": "^2.21.0"
+    "mapillary-js": "^3.1.0"
   }
 }
